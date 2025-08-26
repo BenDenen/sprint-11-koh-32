@@ -1,8 +1,13 @@
 package ru.yandex.practicum.sprint11koh32
 
+import com.google.gson.JsonDeserializationContext
+import com.google.gson.JsonDeserializer
+import com.google.gson.JsonElement
 import com.google.gson.TypeAdapter
+import com.google.gson.annotations.SerializedName
 import com.google.gson.stream.JsonReader
 import com.google.gson.stream.JsonWriter
+import java.lang.reflect.Type
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -12,18 +17,46 @@ data class NewsResponse(
     val data: Data
 )
 
+
 data class Data(
     val title: String,
     val items: List<NewsItem>
 )
 
-data class NewsItem(
-    val id: String,
-    val title: String,
-    val type: String,
-    val created: Date,
+sealed class NewsItem {
 
-)
+    abstract val id: String
+    abstract val title: String
+    abstract val type: String
+    abstract val created: Date
+
+    class Sport(
+        override val id: String,
+        override val title: String,
+        override val type: String,
+        override val created: Date,
+        val specificPropertyForSport: String,
+        val test:String
+    ) : NewsItem()
+
+    class Science(
+        override val id: String,
+        override val title: String,
+        override val type: String,
+        override val created: Date,
+        @SerializedName("specific_property_for_science")
+        val specificPropertyForScience: String,
+    ) : NewsItem()
+
+    class Unknown(
+        override val id: String,
+        override val title: String,
+        override val type: String,
+        override val created: Date,
+    ) : NewsItem()
+
+
+}
 
 
 
@@ -43,4 +76,17 @@ class CustomDateTypeAdapter : TypeAdapter<Date>() {
         return formatter.parse(`in`.nextString())
     }
     
+}
+
+class NewsTypeAdapter: JsonDeserializer<NewsItem> {
+
+    override fun deserialize(json: JsonElement, typeOfT: Type, context: JsonDeserializationContext): NewsItem {
+        val typeJsonField = json.asJsonObject.getAsJsonPrimitive("type").asString
+        return when(typeJsonField) {
+            "sport" -> context.deserialize<NewsItem.Sport>(json, NewsItem.Sport::class.java)
+            "science" -> context.deserialize<NewsItem.Science>(json, NewsItem.Science::class.java)
+            else -> context.deserialize<NewsItem.Science>(json, NewsItem.Unknown::class.java)
+        }
+    }
+
 }

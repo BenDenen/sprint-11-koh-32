@@ -42,8 +42,11 @@ class MainActivity : AppCompatActivity() {
         Log.d(TAG, "uri.getQueryParameter(\"text\") ${uri.getQueryParameter("text")}")
         Log.d(TAG, "uri.fragment ${uri.fragment}")
 
+
         val itemsRv: RecyclerView = findViewById(R.id.items)
         itemsRv.adapter = adapter
+
+        (application as MyApplication).someValue
 
         val retrofit = Retrofit.Builder()
             .baseUrl("https://raw.githubusercontent.com/BenDenen/sprint-11-koh-32/")
@@ -51,6 +54,7 @@ class MainActivity : AppCompatActivity() {
                 GsonConverterFactory.create(
                     GsonBuilder()
                         .registerTypeAdapter(Date::class.java, CustomDateTypeAdapter())
+                        .registerTypeAdapter(NewsItem::class.java, NewsTypeAdapter())
                         .create()
                 )
             )
@@ -82,6 +86,6 @@ class MainActivity : AppCompatActivity() {
 interface Sprint11ServerApi {
 
 
-    @GET("refs/heads/master/jsons/news_1.json")
+    @GET("refs/heads/master/jsons/news_2.json")
     fun getNews1(): Call<NewsResponse>
 }
